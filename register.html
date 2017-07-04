@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="jQuery/jquery-3.2.1.js"></script>
+    <link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.css">
+    <script src="bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+    <script src="JS/jquery.cookie.js"></script>
+
+    <script src="JS/yzm.js"></script>
+    <style>
+
+        body,html{
+            background: #a7ffc9;
+        }
+        .input-group{
+            margin-bottom: 2px;
+        }
+        .container{
+            width: 500px;
+        }
+        .btn{
+            margin:7% 0 0 40%;
+            padding: 6px 22px;
+        }
+        .checkbox{
+            margin: 6% 0 0 22%;
+        }
+        em{
+            font-style: normal;
+        }
+        .input-group span{
+
+        }
+        .input-tip{
+            width: 100%;
+            height: 20px;
+            margin: 5px 0 5px 0;
+        }
+        .nav{
+            width: 500px;
+            margin: 0 0 30px 44%;
+        }
+        #yzm{
+            width: 100%;
+            float: left;
+        }
+        #code_input{
+            width: 200px;
+            float: left;
+            margin-left: 50px;
+        }
+        #v_container{
+            display: inline-block;
+        }
+    </style>
+
+
+</head>
+<body style="margin: 100px" class="obody">
+</div>-->
+    <div id="success">
+
+    </div>
+    <div id="fail">
+
+    </div>
+    <ul class="nav nav-pills">
+        <li class="active"><a href="#tab1" data-toggle="tab">注册</a></li>
+        <li><a href="#tab2" data-toggle="tab">登录</a></li>
+    </ul>
+    <div class="tab-content">
+        <div id="tab1" class="tab-pane fade in active">
+            <div class="container">
+                <div class="input-group">
+                    <span class="input-group-addon text-right">　用户名</span>
+                    <input type="text" class="form-control" placeholder="请输入您的用户名" id="user">
+                    <div class="icon"></div>
+                </div>
+                <div class="input-tip"></div>
+
+                <div class="input-group">
+                    <span class="input-group-addon">设置密码</span>
+                    <input type="text" class="form-control" placeholder="请输入密码" id="pwd1">
+                    <div class="icon"></div>
+                </div>
+                <div class="input-tip"><span class="oSpan1"></span></div>
+
+                <div class="input-group">
+                    <span class="input-group-addon">确认密码</span>
+                    <input type="text" class="form-control" placeholder="请再次输入密码" id="pwd2">
+                    <div class="icon"><span class="glyphicon glyphicon-leaf form-control-feedback"></span></div>
+                </div>
+                <div class="input-tip"><span class="oSpan1"></span></div>
+
+                <div class="input-group">
+                    <span class="input-group-addon">电子邮件</span>
+                    <input type="text" class="form-control" placeholder="请输入邮箱" id="email">
+                    <div class="icon"></div>
+                </div>
+                <div class="input-tip"><span class="oSpan1"></span></div>
+
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" id="check"> 我已阅读并同意 <a href="#">《NO5用户注册协议》</a>
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary" data-toggle="modal" data-target="#myModal"  id="btn">注册</button>
+            </div>
+        </div>
+        <div id="tab2" class="tab-pane fade">
+            <div class="container">
+                <div class="input-group">
+                    <span class="input-group-addon text-right">用户名</span>
+                    <input type="text" class="form-control" id="use" placeholder="请输入您的用户名">
+                    <div class="icon"><span class="glyphicon glyphicon-user form-control-feedback"></span></div>
+                </div>
+                <div class="input-tip"></div>
+
+                <div class="input-group">
+                    <span class="input-group-addon">密　码</span>
+                    <input type="text" class="form-control" id="pass" placeholder="请再次输入密码">
+                    <div class="icon"><span class="glyphicon glyphicon-lock form-control-feedback"></span></div>
+                </div>
+                <div class="input-tip"><span class="oSpan1"></span></div>
+               <!-- <div class="input-group" id="yzm">
+                    <div id="v_container" style="width: 200px;height: 50px;"></div>
+                    <input type="text" class="form-control"id="code_input" placeholder="请输入验证码">
+                </div>-->
+                <button type="submit" class="btn btn-primary" id="login">登录</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+
+<script>
+
+    //  用户名验证
+    var user1 = false;
+    $('#user').focus(function(){
+
+       $('.input-tip').eq(0).html('支持中文、数字、字母、"_"的组合,4-20个字符').css('color','#666');
+   });
+
+    var user = /^[A-Za-z0-9\u4e00-\u9fa5]{4,20}$/;
+    var icon1 = $('.icon').eq(0);
+    $('#user').blur(function(){
+        var userVal = $('#user').val();
+
+       if(!(user.test(userVal))){
+
+           $('.input-tip').eq(0).html('格式错误，仅支持汉字、字母、数字、“_”的组合').css('color','red')
+           $('.icon').eq(0).html(' ');
+           $('<span class="glyphicon glyphicon-remove form-control-feedback"></span>').appendTo(icon1);
+       }else {
+           user1 = true;
+           $('.input-tip').eq(0).html('');
+           $('.icon').eq(0).html(' ');
+           $('<span class="glyphicon glyphicon-ok form-control-feedback"></span>').appendTo(icon1)
+       }
+    });
+
+
+    //  密码验证
+
+    var icon2= $('.icon').eq(1);
+    $('#pwd1').focus(function(){
+        $('.input-tip').eq(1).html('');
+        $('.input-tip').eq(1).html('建议使用字母、数字和符号两种以上的组合，6-20个字符').css('color','#666')
+    });
+
+
+    var pass1 = false;
+    $('#pwd1').blur(function(){
+        var pwd1Val = $('#pwd1').val();
+        var pwd1 = /^[\x21-\x7E]{6,20}$/;
+        if(!(pwd1.test(pwd1Val))){
+            $('.input-tip').eq(1).html('长度只能在6-20个字符之间').css('color','red');
+            $('<span class="glyphicon glyphicon-remove form-control-feedback"></span>').appendTo(icon2)
+        }else {
+            pass1 = true;
+            $('.input-tip').eq(1).html('');
+            $('.icon').eq(1).html(' ');
+            $('<span class="glyphicon glyphicon-ok form-control-feedback"></span>').appendTo(icon2)
+        }
+    });
+    //  再次密码验证
+
+
+    var icon3= $('.icon').eq(2);
+    $('#pwd2').focus(function(){
+        $('.input-tip').eq(2).html('');
+        $('.input-tip').eq(2).html('请再次密码验证').css('color','#666')
+    });
+    var pass2 = false;
+    $('#pwd2').blur(function(){
+        var pwd2Val = $('#pwd2').val();
+
+        if(!(pwd2Val==$('#pwd1').val()&&$('#pwd1').val())){
+            $('.input-tip').eq(2).html('两次输入密码不一致').css('color','red');
+        }
+        else if(pwd2Val==$('#pwd1').val()){
+            pass2 = true;
+            $('.input-tip').eq(2).html('两次输入密码一致')
+        }
+    });
+
+    //  电子邮件
+
+    var icon4= $('.icon').eq(3);
+
+    $('#email').focus(function () {
+
+        $('.input-tip').eq(3).html(' ');
+        $('.input-tip').eq(3).html('请输入正确的邮箱格式').css('color','#666')
+    });
+
+    var email1 = false;
+    $('#email').blur(function(){
+        var emailVal = $('#email').val();
+        var email = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/;
+        if(!(email.test(emailVal))){
+            $('.input-tip').eq(3).html('邮件地址的格式不正确，请您重新输入！').css('color','red');
+            $('<span class="glyphicon glyphicon-remove form-control-feedback"></span>').appendTo(icon4)
+        }else {
+            email1 = true;
+            $('.input-tip').eq(3).html('');
+            $('.icon').eq(3).html(' ');
+            $('<span class="glyphicon glyphicon-ok form-control-feedback"></span>').appendTo(icon4)
+        }
+    });
+
+    //     注册按钮
+
+    var str = '';
+    //  BootStarp 模态窗
+
+    //  注册成功
+    function fail() {
+
+        str += '<div class="modal fade" id="myModal" tabindex="-1">' +
+            '<div class="modal-dialog">' +
+            '<div class="modal-content">' +
+            '<div class="modal-header">该用户已经存在' +
+            '<button class="close" data-dismiss="modal"><span>&times;</span></button>' +
+            '</div>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
+        $('#fail').append(str);
+    }
+    function success() {
+
+        str += '<div class="modal fade" id="myModal" tabindex="-1">' +
+                '<div class="modal-dialog">' +
+                '<div class="modal-content">' +
+                '<div class="modal-header">恭喜你注册成功' +
+                '<button class="close" data-dismiss="modal"><span>&times;</span></button>' +
+                '</div>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+        $('#success').append(str);
+    }
+    //   用户已经存在
+
+
+    //  注册
+    var checkBox = document.getElementById('check');
+    var oInput = document.getElementsByTagName('input');
+    var btn = document.getElementById('btn');
+    $('.container').on('click','#btn',function () {
+
+        if(user1==true && pass1==true && pass2==true && email1==true){
+            if(checkBox.checked){
+                var xhr = new XMLHttpRequest();
+                xhr.open('post','http://127.0.0.1/no5/register.php',true);
+                xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+                xhr.send('username='+oInput[0].value+'&pwd='+oInput[1].value+'&email='+oInput[3].value);
+                xhr.onreadystatechange = function () {
+                    if(xhr.readyState==4 && xhr.status==200){
+                        var obj = JSON.parse(xhr.responseText);  // {status: 0, msg: "用户已存在"}
+                        if(obj.status==0){
+                            alert('登录失败')
+
+                        }else {
+                            alert('登录成功')
+                        }
+
+                    }
+
+                };
+
+            }
+        }
+
+    });
+
+        //   登录
+    var login = document.getElementById('login');
+    var userLogin = document.getElementById('use');
+    var passLogin = document.getElementById('pass');
+
+
+    login.onclick = function () {
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('post','http://127.0.0.1/no5/login.php',true);
+        xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded');
+        xhr.send('username='+userLogin.value+'&pwd='+passLogin.value);
+        xhr.onreadystatechange = function () {
+            if(xhr.readyState==4 && xhr.status==200){
+
+                var obj = JSON.parse(xhr.responseText);  // {status: 0, msg: "用户已存在"}
+
+                if(oInput[0].value==userLogin.value && oInput[1].value==passLogin.value){
+                    alert('登录成功')
+                    location.href = 'index.html';
+                }else {
+                    alert('登录失败')
+                }
+
+            }
+        };
+
+    };
+
+
+</script>
+
+<!--<script>
+    var verifyCode = new GVerify("v_container");
+
+    document.getElementById("code_input").onblur = function(){
+        var res = verifyCode.validate(document.getElementById("code_input").value);
+        var inpval = document.getElementById('code_input').value;
+        console.log(inpval);
+
+        if(!res){
+            alert('匹配失败')
+        }else {
+            alert('匹配成功')
+        }
+
+
+    }
+</script>-->

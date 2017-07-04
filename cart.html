@@ -1,0 +1,449 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>购物车</title>
+    <script src="jQuery/jquery-3.2.1.js"></script>
+    <link rel="stylesheet" href="bootstrap-3.3.7-dist/css/bootstrap.min.css">
+    <script src="bootstrap-3.3.7-dist/js/bootstrap.js"></script>
+    <script src="JS/jquery.cookie.js"></script>
+    <style>
+        .table>tbody>tr td:nth-child(3){
+            padding: 0 30px;
+        }
+        .table>tbody>tr>td, .table>tbody>tr>th, .table>tfoot>tr>td, .table>tfoot>tr>th, .table>thead>tr>td, .table>thead>tr>th {
+            padding: 8px;
+            line-height: 1.42857143;
+            vertical-align: middle;
+            border-top: 1px solid #ddd;
+            text-align: center;
+        }
+        #selectedTotal,.subtotal,tr td:nth-child(5) span{
+            color: red;
+        }
+
+        .table{
+            position: relative;
+        }
+        .oDiv{
+            width: 1140px;
+            height: 150px;
+            padding: 20px;
+            background: salmon;
+            position: absolute;
+            bottom: 72px;
+            z-index: 99999;
+        }
+        .oDiv span:first-child{
+            position: absolute;
+            z-index: 999999;
+            bottom: -8px;
+            left: 800px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right:  8px solid transparent;
+            border-top: 8px solid #fff;
+            border-bottom:0 solid #fff;
+        }
+        .container{
+            position: relative;
+        }
+        .oDiv{
+            display: none;
+        }
+        .up{
+            cursor: pointer;
+        }
+
+        .goods img{
+            text-align: left;
+        }
+
+        .inner{
+            width: 100px;
+            height: 93px;
+            background: yellow;
+            float: left;
+            margin-right: 30px;
+        }
+        .inner img{
+            width: 100px;
+            height: 93px;
+            float: left;
+        }
+        .input-group .form-control{
+            width: 40px;
+        }
+        .input-group-btn{
+            width: 0;
+        }
+        .txt{
+            line-height: 8.428571;
+        }
+        .goods img {
+            float: left;
+        }
+        #selectedTotal{
+            margin: 0 5px;
+        }
+        #priceTotal{
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 7px;
+        }
+        .ob{
+            display: inline-block;
+            width: 9px;
+            height: 5px;
+            background: url(images/cart.png) -45px -91px;
+            overflow: hidden;
+            vertical-align: middle;
+            margin: -5px 0 0 5px;
+            -webkit-transition: all .2s ease-in 0s;
+            transition: all .2s ease-in 0s;
+            cursor: pointer;
+        }
+        .down {
+            background-position: -45px -95px;
+            -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+        }
+        .active{
+            display: none;
+        }
+        #oDiv{
+            width: 100%;
+            height: 122px;
+            position: absolute;
+            left: 0;
+            bottom: 51px;
+            z-index: 999;
+            background: rgba(102,102,102,.85);;
+            padding: 5px;
+        }
+        #oDiv .oSpan{
+            width: 100%;
+            height: 20px;
+            background: skyblue;
+            float: left;
+            line-height: 20px;
+
+        }
+        .arr{
+            position: absolute;
+            bottom: -4px;
+            right: 360px;
+            display: block;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 4px solid rgba(102,102,102,.7);
+        }
+        #count{
+            font-weight: 700;
+            color: #e4393c;
+            font-style: normal;
+            margin: 0 5px;
+        }
+        #oDiv img{
+            width: 100px;
+            padding: 5px;
+        }
+    </style>
+
+
+
+</head>
+<body style="margin: 100px">
+<div class="container">
+    <h1 id="back"><a href="index.html">返回首页</a></h1>
+    <table class="table table-striped ">
+        <thead>
+       <!--     <tr>
+                <th><input type="checkbox" class="checkAll">全选</th>
+                <th>商品</th>
+                <th>单价</th>
+                <th>数量</th>
+                <th>小计</th>
+                <th>操作</th>
+            </tr>-->
+        </thead>
+        <tbody id="tb">
+        <!--  <tr>
+           <<td class="check"><input type="checkbox" class="checkOne"></td>
+            <td class="goods"><img src="images/1.jpg" height="93" width="100"/><span class="txt">三只松鼠_夏威夷果265gx2袋零食坚果炒货干果奶油味送开口器</span></td>
+            <td class="price">67</td>
+            <td class="count">
+                <div class="input-group">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default reduce" type="button">-</button>
+                    </span>
+                    <input type="text" class="form-control txt" value="1">
+                    <span class="input-group-btn">
+                        <button class="btn btn-default add" type="button">+</button>
+                    </span>
+                </div>
+            </td>
+            <td class="subtotal">67</td>
+            <td class="operation"><a href="#" class="delete">删除</a></td>
+        </tr>-->
+
+        <!-- <tr class="foot" id="foot" style="position: relative;">
+           <td class="select_all"><input type="checkbox" class="checkAll">全选</td>
+            <td><a href="#" class="delete">删除</a></td>
+            <td> </td>
+            <td id="selected">已选择商品
+                <span id="selectedTotal" style="font-weight: 700">0</span>件
+            </td>
+            <td class="total">合计: ＄<span id="priceTotal">0.00</span></td>
+            <td><button class="btn btn-danger closing">结算</button></td>
+              <div class="oDiv">
+                  <span class="sp"></span>
+              </div>
+        </tr>-->
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
+
+<script>
+
+    $(function () {
+
+        var thead = $('thead');
+        var arr = $.cookie('cart');
+        var str3 = '';
+
+       cartFunc();
+        //  创建 tr td
+        function cartFunc() {
+
+            if(arr){
+                arr = JSON.parse(arr);    //   获取到的是字符串，转成数组;
+                for(var i=0;i<arr.length;i++){
+                    var obj = arr[i];   //  每个商品的数组
+                    //  创建头
+                    var str = '';
+                    //  创建tr td
+                    var str2 = '';
+
+                    str+='<tr>' +
+                            '<th><input type="checkbox" class="checkAll">全选</th>' +
+                            '<th>商品</th>' +
+                            '<th>单价</th>' +
+                            '<th>数量</th>' +
+                            '<th>小计</th>' +
+                            '<th>操作</th>' +
+                            '</tr>';
+
+
+                    str2 += '<tr class="otr">' +
+                            '<td class="goods"><img src = "'+obj.img+'" height="118"><span class="txt">'+obj.content+'</span></td> ' +
+                            '<td class="price">'+obj.dePrice+'</td>' +
+                            '<td class="count">' +
+                            '<div class="input-group">' +
+                            '<span class="input-group-btn">' +
+                            '<button class="btn btn-default reduce" type="button">-</button>' +
+                            '</span>' +
+                            '<input type="text" class="form-control ipt" value="'+obj.num+'">' +
+                            '<span class="input-group-btn">' +
+                            '<button class="btn btn-default add" type="button">+</button>' +
+                            '</span>' +
+                            '</div>' +
+                            '</td>' +
+                            '<td class="subtotal">'+obj.dePrice*obj.num+'</td>' + //   当前的价格 * 数量  num = 小计
+                            '<td class="operation"><a href="javascript:;" class="delete btn btn-danger"> ' +
+                            '<strong>删除</strong>'+
+                            '</tr>';
+
+
+                    $('#tb').append(str2);
+
+                }
+                //
+
+               //   已选择商品  件
+                var count = 0;
+
+
+                for(var j=0;j<$('.ipt').length;j++){
+                    count+=($('.ipt').eq(j).val()-0)
+                }
+
+                //  删除
+                $('.operation').on('click','.delete',function () {
+
+                    var index = $(this).index('.delete');   //  获取当前下标
+                    var cook = JSON.parse($.cookie('cart')); //  转数组
+                    if(confirm("确认要删除？")){
+                        window.event.returnValue = false;
+                        cook.splice(index,1);
+                        $.cookie('cart',JSON.stringify(cook),{expires:30,path:'/'});
+                        location.reload();
+                    }
+                });
+                //  点击+
+                $('.count').on('click','.add',function () {
+
+                    var index = $(this).index('.add');
+                    var arr = JSON.parse($.cookie('cart'));
+                    arr[index].num++;
+                    $.cookie('cart',JSON.stringify(arr),{expires:30,path:'/'});
+                    location.reload()
+                });
+
+                //  点击-
+                $('.count').on('click','.reduce',function () {
+
+                    var index = $(this).index('.reduce');
+                    var arr = JSON.parse($.cookie('cart'));
+                    arr[index].num--;
+                    if(arr[index].num<1){
+                        arr[index].num=1;
+                       alert('商品数量不能小于1')
+                    }
+                    $.cookie('cart',JSON.stringify(arr),{expires:30,path:'/'});
+                   location.reload()
+                });
+
+                //   总计
+                var totalMoney = 0;
+
+                if (obj.checked){
+                    for(var k=0;k<$('.subtotal').length;k++){
+
+                        totalMoney+=($('.subtotal').eq(k).text()-0)
+                    }
+                }
+                if(obj.checked){
+                    $('.otr').prepend('<td class="check"><input type="checkbox" class="checkOne" checked></td>');
+                    $('.otr').css('background','#fff4e8');
+                    $('.checkAll').eq(0).prop('checked')
+
+                }else {
+                    $('.otr').prepend('<td class="check"><input type="checkbox" class="checkOne"></td>');
+                }
+
+
+                //   创建  结算
+                str3 += '<tr class="foot" id="foot" style="position: relative;">' +
+                        '<td class="select_all"><input type="checkbox" class="checkAll">全选</td>' +
+                        '<td><a href="javascrip:t;" class="delAll"></a></td>' +
+                        '<td></td>' +
+                        '<td id="selected">已选择商品' +
+                        '<span id="selectedTotal" style="font-weight: 700">'+count+'</span>件'+
+                        '<b class="ob"></b>'+
+                        '</td>' +
+                        '<td class="total">合计:<span id="priceTotal">'+'￥'+totalMoney+'</span></td>' +
+                        '<td><button class="btn btn-danger closing">结算</button></td>' +
+                        '<div class="oDiv">' +
+                        '<span class="sp"></span>' +
+                        '</div>' +
+                        '</tr>';
+                $('#tb').append('<div class="active" id="oDiv"><a href="javascript:;" class="arr"></a><span class="oSpan">普通商品<em id="count">'+count+'</em>件</span></div>');
+                $('#tb').append(str3);
+
+
+                thead.append(str);
+
+               var checkAll = $('.checkAll');         //   全选
+                var checkOne = $('.checkOne');      //  单选
+                //  上面全选  选不到下面的全选按钮
+              /*  $('.check').on('click','.checkOne',function () {
+
+                 var index = $(this).index('.checkOne');   //   单选   获取下标
+                 var arr = JSON.parse($.cookie('cart'));
+                 //  取反
+                 arr[index].checked = !arr[index].checked;
+                 $.cookie('cart',JSON.stringify(arr),{expires:30,path:'/'});
+                     location.reload();
+                 });*/
+
+
+
+
+                var oDov = $('#oDiv');
+                for(var i=0;i<checkOne.length;i++){
+                    if(checkOne[i].checked){
+
+                        $('#oDiv').append($('<img>').attr('src',obj.img));
+                    }
+                }
+
+
+                checkAll.eq(0).on('click',function () {
+                    //   方法  1
+                    if($(this).prop('checked')){
+
+                        checkOne.prop('checked',true);
+                        $('#tb tr').css('background','#fff4e8');
+                        $('#foot').css('background','')
+                    }else {
+                        checkOne.prop('checked',false);
+                        $('#tb tr').css('background','');
+                    }
+                    //        checkOne.prop('checked',$(this).prop('checked'));   //   方法2
+                });
+                //  下面全选  选中所有的按钮
+                checkAll.eq(1).on('click',function () {
+
+                    if($(this).prop('checked')){
+
+                        checkOne.prop('checked',true);
+                        checkAll.eq(0).prop('checked',true);
+                        $('#tb tr').css('background','#fff4e8');
+                        $('#foot').css('background','');
+                    }else {
+                        checkOne.prop('checked',false);
+                        checkAll.eq(0).prop('checked',false);
+                        $('#tb tr').css('background','');
+                    }
+                });
+
+                //  单选按钮
+                checkOne.click(function () {
+
+                    var index1 = $(this).index('.checkOne');  // 每个单选按钮的下标
+
+                    var count = $('.checkOne').length;//  单选按钮  长度
+                    var cbxCount = $('#tb :checkbox:checked').length;  //  选中的按钮
+                    //  如果当前按钮被选中了 就添加背景
+                    if($(this).prop('checked')){
+                        $('#tb .otr').eq(index1).css('background','#fff4e8');
+
+                    }else {
+                        $('#tb .otr').eq(index1).css('background','');
+                    }
+                    //  如果被选中按钮的长度  等于  按钮的长度  就是全选
+                    if(count==cbxCount){
+                        $('.checkAll').eq(0).prop('checked',true);
+                    }else {
+                        $('.checkAll').eq(0).prop('checked',false);
+                    }
+
+                });
+
+
+            }
+
+        }
+
+    })
+
+</script>
+
+<script>
+    //  隐藏div  点击显示和隐藏
+    $(function () {
+        $('#foot').on('click','.ob',function () {
+
+            $(this).toggleClass('down');
+            $('#oDiv').toggle();
+
+        })
+    });
+</script>

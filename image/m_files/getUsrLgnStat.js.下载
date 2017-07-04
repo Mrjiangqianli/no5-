@@ -1,0 +1,19 @@
+//¼ì²éÓÃ»§µÇÂ¼×´Ì¬
+function getUsrLgnStat(frm, objStat){
+	new Ajax.Request(
+		"/ajaxGetUserLoginState.asp",{
+			method: 'post',
+			parameters:
+			Form.serialize(frm),
+			onComplete:function(xhr){
+				var ret = xhr.responseText;
+				if (xhr.status != 200) {
+					return null;
+				}
+				window.setTimeout(function(){
+					objStat.setAttribute("stat", ret);
+				}, 200);
+			}
+		}
+	);
+}

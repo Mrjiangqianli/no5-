@@ -1,0 +1,125 @@
+if (top != self){
+	var arrSiteUrl = new Array("www.no5.com.cn", "123.103.13.224", "123.103.13.225", "192.168.0.200");
+	for (var i = 0; i < arrSiteUrl.length; i++){
+		var url = "http://" + arrSiteUrl[i];
+		if (top.location.href.substring(0, url.length).toLowerCase() != self.location.href.substring(0, url.length).toLowerCase()){	
+			top.location=self.location;
+			break;
+		}
+	}
+}
+
+var isIE6		= navigator.appVersion.indexOf("MSIE 6.0")>-1;
+var browser		= getUserBrowser();
+var tagSuc		= "suc",tagErr = "err";
+var msgQuestion = "msgQuestion"
+
+var zzStringLen = /[^\x00-\xff]/g;
+var zzChn		= /[\u4e00-\u9fa5]/;
+var zzPostcode	= /^\d{6}$/;
+var zzMail		= /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z0-9]+$/;
+var zzCellphone = /^\d{11}$/;
+var zzPhone		= /^[0-9\/\-\;]+$/;
+
+var elementCSS = {
+	cellChecked : "cellChecked",
+	cellUnChecked : "cellUnChecked"
+}
+
+String.prototype.Trim = function(){return this.replace(/(^\s*)|(\s*$)/g, "");}
+String.prototype.LTrim = function(){return this.replace(/(^\s*)/g, "");}
+String.prototype.RTrim = function(){return this.replace(/(\s*$)/g, "");}
+String.prototype.LEN = function(){return this.replace(zzStringLen,"**").length;}
+String.prototype.isChnStr = function(){for (var i=0;i<this.length;i++){if (!zzChn.test(this.charAt(i))){return false;}}return true;}
+String.prototype.isSimpleStr = function(){var sChar = this.charAt(0),sChars = '';for(var ii=0;ii<this.length;ii++){sChars += sChar;}if(this == sChars){ return true;}return false;}
+String.prototype.isEmpty = function(){return this.length == 0;}
+String.prototype.clearHtml = function(){return this.replace(/<[^>]*>/g, "");}
+String.prototype.toBanJiao = function(){
+	var ret = "", c;
+	var str = new String(this)
+	for (var i = 0; i < str.length; i++){
+		c = str.charCodeAt(i);
+		if(c >= 65281 && c <= 65373) ret += String.fromCharCode(c - 65248);
+		else ret += str.charAt(i);
+	}
+	return ret;	
+}
+
+function getElems(elemName, obj){
+	return (obj || document).getElementsByTagName(elemName);
+}
+
+function getElemIdx(curObj, objs){
+	for (var i = 0; i < objs.length; i++){
+		if (objs[i] == curObj) return i;
+	}
+}
+
+function docScrollTop(){
+	return (document.documentElement && document.documentElement.scrollTop) ? document.documentElement.scrollTop : document.body.scrollTop;
+}
+function docScrollLeft(){
+	return (document.documentElement && document.documentElement.scrollLeft) ? document.documentElement.scrollLeft : document.body.scrollLeft;
+}
+function sysErr(msg){
+	alert("\r\n系统错误，请与您的系统管理员联系！\r\n\r\n" + msg.clearHtml());
+}
+function getUserBrowser(){
+	var Sys = {};
+	var ua = navigator.userAgent.toLowerCase();
+	var s,ret="";
+	(s = ua.match(/msie ([\d.]+)/)) ? Sys.ie = s[1] :
+	(s = ua.match(/firefox\/([\d.]+)/)) ? Sys.firefox = s[1] :
+	(s = ua.match(/chrome\/([\d.]+)/)) ? Sys.chrome = s[1] :
+	(s = ua.match(/opera.([\d.]+)/)) ? Sys.opera = s[1] :
+	(s = ua.match(/version\/([\d.]+).*safari/)) ? Sys.safari = s[1] : 0;
+
+	if (Sys.ie) ret="ie";
+	if (Sys.firefox) ret="firefox";
+	if (Sys.chrome) ret="chrome";
+	if (Sys.opera)	ret="opera";
+	if (Sys.safari) ret="safari";
+	
+	return ret;
+}
+function showMask(isParent){
+	var doc = (isParent) ? parent.document : document;
+	var obj = doc.getElementById("lyrMask")
+	if(isIE6){
+		obj.style.width = doc.body.clientWidth + "px";
+		obj.style.height = doc.body.scrollHeight;
+	}
+	obj.style.visibility = "visible";
+}
+function getElmtPos(obj){   
+	for(var lx = 0, ly = 0; obj != null; lx += obj.offsetLeft, ly += obj.offsetTop, obj = obj.offsetParent);
+	return{x:lx, y:ly};
+}
+function getAjaxRET(ret){
+	var arr = ret.split("\r\n");
+	return {tag : arr[0] == tagSuc, msg : arr[1]}
+}
+function convertRound(number, fractionDigits){
+	return Math.round(number * Math.pow(10, fractionDigits)) / Math.pow(10, fractionDigits);
+}
+function isParent (obj, parentObj){
+	while (obj != undefined && obj != null && obj.tagName.toUpperCase() != 'HTML'){ 
+		if (obj == parentObj){ 
+			return true; 
+		}
+		obj = obj.parentNode;		
+	} 
+	return false; 
+}
+function sErr(ctr, msg){
+	var objTip = ctr.nextSibling;
+	if (msg){
+		ctr.className = "txtErr errCtrW";
+		objTip.innerHTML = msg;
+		objTip.className = "errMsg";
+		return false;
+	}
+	objTip.innerHTML = "";
+	objTip.className = "";
+	return true;	
+}

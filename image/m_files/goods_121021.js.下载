@@ -1,0 +1,586 @@
+var $j = jQuery;
+var floatBTN;
+var docWidth = 980;
+var tabBar, tabBarY;
+var cpid, cpmr, cppr, ciid = 0, hPicExist = true; //hPicExist超大图存在标记
+var errLgn = 0;
+var arrImgs = new Array();
+var arrTxts = new Array();
+var scrollY = 0;
+var tmrLoadImg, tmrLoadTxt, tmrScroller;
+var sReady = "ready", sLoad = "load", sComplete = "complete";
+var load_gwxz = false;
+
+$j(document).ready(function(){
+	if (!$("cpid")) return;
+	
+	onWindowResize.add(fixFloatBtn);
+	
+	cpid = $F("cpid");
+	cpmr = Number($F("cpmr"));
+	cppr = Number($F("cppr"));
+	scrollY = docScrollTop();
+	
+	var btns = getElems("div", $("floatButtons"));
+	btns[0].onclick = function(){goTop();}
+	btns[1].onclick = function(){OpenService(0);}
+	
+	var imgs = getElems("img");
+	var j = 0;
+	for (var i = 0; i < imgs.length; i++){
+		if (imgs[i].getAttribute("srct")) {arrImgs[j] = imgs[i]; j += 1;}
+	}
+	tmrLoadImg = window.setInterval("loadImg()", 100);
+	
+	arrTxts = [
+				[getElems("span", $("box_bjtj"))[0], sReady],
+				[getElems("span", $("box_goum"))[0], sReady],
+				[getElems("span", $("box_tlrx"))[0], sReady],
+				[getElems("span", $("box_tprx"))[0], sReady],
+				[getElems("span", $("box_zjll"))[0], sReady],
+				[getElems("span", $("box_rdzx"))[0], sReady],
+				[$("sticPic1"), sReady],
+				[$("tab_box_1"), sReady],
+				[$("tab_box_2"), sReady]
+			  ];
+			   
+	tmrLoadTxt = window.setInterval("chkTxtObject()", 10);
+	
+	tabBar = $("tabBar");
+	tabBarY = getElmtPos(tabBar).y;
+	fixTabBar();
+	fixFloatBtn();
+	
+	attachPicBox();
+	attachMagnifier();	//放大镜
+	attachTabBar();
+	
+	if ($("btnBuy")) attachBuyCtrs(); //购买按钮相关事件
+	if ($("btnOOS")){
+		$("btnOOS").onclick = function(){
+			window.location.href = "/oosregister_" + cpid + ".html";
+		}
+	}
+	
+	//收藏夹按钮begin
+	var btnFav = $("btnFav");
+	if (btnFav){
+		btnFav.onclick = function(){
+			showWaitTip(true, "请稍候...");
+			var objStat = this.childNodes[0];
+			var frm = document.emptyFrm;
+			frm.act.value = "fav";
+			getUsrLgnStat(document.emptyFrm, objStat);
+			var tmr = window.setInterval(function(){
+				if (objStat.getAttribute("stat")){
+					window.clearInterval(tmr);
+					var stat = objStat.getAttribute("stat");
+					var json = jsonParse(stat);
+					objStat.removeAttribute("stat");
+					var login = json.login;
+					if (login == "0"){
+						showWaitTip(true, "正在加入收藏夹...");
+						$("btnFav").style.visibility = "hidden";
+						window.setTimeout(function(){addToFav();}, 300);
+						return;
+					}
+					var needCode = (login == "1") ? true : false;
+					showLgnDialog(getFormStr("fav", needCode));
+					showWaitTip(false);
+				}
+			}, 1);
+		}
+	}
+	//收藏夹按钮end	
+});
+
+$j(window).scroll(function(){
+	scrollY = docScrollTop();
+	fixTabBar();
+	fixFloatBtn();
+});
+
+var fixFloatBtn = function(){
+	floatBTN = $("floatButtons");
+	if (!floatBTN) return;
+	floatBTN.style.bottom = (floatBTN.offsetHeight + 5) + "px";
+	var btnRetTop = getElems("div", floatBTN)[0];
+	var docCW = document.documentElement.clientWidth;
+	var docCH = document.documentElement.clientHeight;
+	var nl = (docCW > docWidth + floatBTN.offsetWidth + 33) ? (docCW - docWidth) / 2 + docWidth + 3 : docCW - floatBTN.offsetWidth - 3;	
+	floatBTN.style.left = (isIE6) ? nl + docScrollLeft() + "px" : nl + "px";
+	if (isIE6) floatBTN.style.top = scrollY + docCH - floatBTN.offsetHeight + "px";
+	floatBTN.style.visibility = "visible";
+	btnRetTop.style.visibility = (scrollY > 0) ? "visible" : "hidden";
+}
+
+function fixTabBar(){
+	if (!tabBar) return;
+	var btnBuy = $("btnBuy");
+	if (btnBuy) getElems("button", tabBar)[0].style.visibility = (scrollY >= getElmtPos(btnBuy).y + btnBuy.offsetHeight) ? "visible" : "hidden";
+	if (scrollY > tabBarY){
+		$("tabBarR").style.display = "block";
+		tabBar.style.position = (isIE6) ? "absolute" : "fixed";
+		tabBar.style.top = (isIE6) ? scrollY + "px" : "0px";		
+	}else{
+		$("tabBarR").style.display = "none";
+		tabBar.style.position = "static";
+	}
+}
+
+function loadImg(){
+	for (var i = 0; i < arrImgs.length; i++){		
+		if (scrollY + document.documentElement.clientHeight > getElmtPos(arrImgs[i]).y){
+			var obj = arrImgs[i];
+			if (obj.getAttribute("rz")){obj.removeAttribute("width"); obj.removeAttribute("height");}
+			obj.setAttribute("src", obj.getAttribute("srct"));	
+			if (obj.className == "_loading"){
+				if (obj.complete){
+					arrImgs.splice(i, 1);
+					obj.style.visibility = "visible";
+				}
+			}else arrImgs.splice(i, 1);
+		}
+	}
+	if (arrImgs.length == 0) window.clearInterval(tmrLoadImg);
+}
+
+function chkTxtObject(){
+	var tagId;
+	for (var i = 0; i < arrTxts.length; i++){
+		var txtObj = arrTxts[i][0];
+		if (scrollY + document.documentElement.clientHeight > getElmtPos(txtObj).y){
+			if (i == 0 || i == 7){
+				if (arrTxts[i][1] == sReady){
+					loadTxt(i);
+					arrTxts[i][1] = sLoad;
+				}
+			}
+			else{			
+				if (arrTxts[i-1][1] == sComplete && arrTxts[i][1] == sReady){
+					loadTxt(i);
+					arrTxts[i][1] = sLoad;
+				}
+			}
+		}
+	}
+	var chkFlag = true;
+	for (var i = 0; i < arrTxts.length; i++){
+		if (arrTxts[i][1] == sReady){
+			chkFlag = false;
+			break;
+		}
+	}
+	if (chkFlag) window.clearInterval(tmrLoadTxt);
+}
+
+function loadTxt(tagId){
+	var url = "/ajaxGoodsRelative.asp?prodId=" + cpid + "&tagId=" + tagId + "&t=" + new Date().getTime();
+	new Ajax.Request(
+		url,{
+			method:"get",
+			onComplete:function(xhr){
+				var ret = xhr.responseText
+				if (xhr.status != 200){alert(ret); return}
+				var json = jsonParse(ret);
+				var nodeId = parseInt(json.nodeId, 10);
+				var curObj;
+				curObj = arrTxts[nodeId][0];
+				window.setTimeout(function(){
+					if (nodeId < 6){
+						var parObj = curObj.parentNode;
+						parObj.removeChild(curObj);
+						parObj.innerHTML = parObj.innerHTML + json.nodeText;
+					}else curObj.innerHTML = json.nodeText;
+					arrTxts[nodeId][1] = sComplete;
+				}, 200);
+			}
+		}
+	);
+}
+
+function showLgnDialog(msg){
+	showInfo("您尚未登录" ,msg, false, null);
+	var frm = document.frmFU;
+	var btn = $("btnLogin");
+	disForm(frm, true);	
+	if ($("lgnFai")){$("lneVcode").style.display = "block"; frm.requestVC.value = "1";} else errLgn = 0;
+	loadVcode();
+	var els = getElems("input", frm);
+	for (var i = 0; i < els.length; i++){
+		els[i].onfocus = function(){
+			this.className = this.className.replace(new RegExp(" txtErr\\b"), "") + " txtFcs";
+			this.parentNode.nextSibling.innerHTML = "&nbsp;";
+		}
+		els[i].onblur = function(){this.className = this.className.replace(new RegExp(" txtFcs\\b"), "") + " txt1";}
+	}
+	var lbls = getElems("label", frm);
+	lbls[0].onclick = function(){var w = window.open("/customer/userregister.html"); w.focus();}
+	lbls[1].onclick = function(){var w = window.open("/forget_password.asp"); w.focus();}
+	frm.onsubmit = function(){btn.focus(); chkDlgLogin(); return false;}	
+}
+function getFormStr(act, needVcode){
+	var vClsTxt = (needVcode) ? "block" : "block";
+	needVcode = (needVcode) ? "1" : "0";
+	var f = "<form name='frmFU' autocomplete='off'><ul>" +
+			"<input type='hidden' name='act' value='" + act + "'>" + 
+			"<input type='hidden' name='requestVC' value='" + needVcode + "' />" +
+			"<input type='hidden' name='vcTag' value='login_layer' />" +
+			"<input type='hidden' name='prodId' value='" + cpid + "' />" +
+			"<li class='uitm'>用户名：<input type='text' name='userName' class='ctrTxt txt1' /> <label>注册新用户</label></li>" +
+			"<li class='citm'>&nbsp;</li>" +
+			"<li class='uitm'>密　码：<input type='password' name='password' class='ctrTxt txt1' /> <label>忘记密码？</label></a></li>" +
+			"<li class='citm'>&nbsp;</li>" +
+			"<li id='lneVcode' class='uitm' style='display:" + vClsTxt + ";'>验证码：<input type='text' name='verifyCode' class='ctrTxt txt2' />&nbsp;<img id='imgVcode' src='/images/loading.gif'></li>" +
+			"<li class='citm'>&nbsp;</li>" +
+			"<li class='uitm'><button type='submit' id='btnLogin' class='prodBtn'>登 录</button><div class='errtxt'>&nbsp;</div></li></ul>" +
+			"</form>";
+	return f;
+}
+function chkDlgLogin(){
+	var frm = document.frmFU;
+	var btn = $("btnLogin");
+	var els = getElems("li", frm);
+	var chkFlag = true;
+	if (frm.userName.value.length == 0){frm.userName.className = "ctrTxt txt1 txtErr"; els[1].innerHTML = "请输入用户名！"; chkFlag = false;}
+	if (frm.password.value.length == 0){frm.password.className = "ctrTxt txt1 txtErr"; els[3].innerHTML = "请输入密码！"; chkFlag = false;}
+	if (frm.requestVC.value == "1"){
+		if (frm.verifyCode.value.length == 0){
+			frm.verifyCode.className = "ctrTxt txt2 txtErr";
+			els[5].innerHTML = "请输入验证码！";
+			chkFlag = false;
+		}
+	}
+	if (!chkFlag) return;
+	btn.disabled = true;
+	btn.nextSibling.innerHTML = "&nbsp;";
+	new Ajax.Request(
+		"/ajaxChkLogin.asp",{
+			method: 'post',
+			parameters:
+			Form.serialize(frm),
+			onComplete:function(xhr){
+				var ret = xhr.responseText;
+				window.setTimeout(function(){
+					//alert(ret);
+					if (xhr.status != 200) return;
+					var json = jsonParse(ret);
+					var lgnRst = json.login;
+					var act = json.act;
+					switch(lgnRst){
+						case "suc":
+							switch(act){
+								case "fav":
+									$("btnFav").style.visibility = "hidden";
+									$("favSuc").style.visibility = "visible";
+									clsdlg("dlgInfo");
+									break;
+								case "prodReview":
+									clsdlg("dlgInfo");
+									if (json.canProdRvw != "suc"){
+										$("btnRvw").disabled = true;
+										$("btnRvw").previousSibling.innerHTML = json.canProdRvw;
+										$("btnRvw").previousSibling.style.visibility = "visible";
+										return;
+									}
+									showTxtForm(act, $("btnRvw"), json.ordrId);									
+									break;
+								case "saveProdRvw":
+									clsdlg("dlgInfo");
+									$("btnSaveRvw").disabled = false;
+									break;									
+								case "prodQuestion":
+									clsdlg("dlgInfo");
+									var canProdQue = json.canProdQue;
+									if (canProdQue != "suc"){
+										$("btnQue").disabled = true;
+										$("btnQue").previousSibling.innerHTML = canProdQue;
+										$("btnQue").previousSibling.style.visibility = "visible";
+										return;
+									}									
+									showTxtForm(act, $("btnQue"), "");
+									break;
+								case "saveProdQue":
+									clsdlg("dlgInfo");
+									$("btnSaveQue").disabled = false;
+									break;
+								default:
+									alert("错误的请求" + act);
+									break;
+							}
+							break;
+						case "chkFail":
+							errLgn += 1;
+							if (errLgn > 2){$("lneVcode").style.display = "block"; frm.requestVC.value = "1";}
+							btn.disabled = false;							
+							btn.nextSibling.innerHTML = "用户名或密码错误！"
+							break;
+						case "vCodeFail":
+							disForm(frm, true);
+							frm.verifyCode.blur();
+							frm.verifyCode.className = "ctrTxt txt2 txtErr";
+							els[5].innerHTML = "校验码错误！";
+							loadVcode();						
+							break;
+					}
+				}, 300);
+			}
+		}
+	);	
+}
+
+function loadVcode(){	
+	var imgVcode = $("imgVcode");
+	imgVcode.src = "/images/loading.gif";
+	var btn = $("btnLogin");
+	btn.disabled = true;
+	window.setTimeout(function(){
+		imgVcode.src = "/VerifyCode.asp?tag=" + new Date().getTime() + "&location=login_layer";	
+	}, 200);	
+	var tmr = window.setInterval(function(){
+		if (imgVcode.complete && imgVcode.src.indexOf(".asp") != -1){
+			window.clearInterval(tmr);
+			var frm = document.frmFU;
+			disForm(frm, false)
+			btn.disabled = false;
+		}
+	}, 1);
+}
+
+function disForm(frm, flag){
+	var els = getElems("input", frm)
+	for (var i = 0; i < els.length; i++){
+		if (els[i].type == "text" || els[i].type == "password")	els[i].disabled = flag;
+	}
+}
+
+function jump(id){
+	var sh;
+	switch(id){
+		case 0:
+			var obj = getElems("a", tabBar)[1];
+			obj.click();
+			sh = getElmtPos($("tab_box_1")).y - tabBar.offsetHeight;			
+			break;
+	}
+	if (sh) window.scrollTo(0, sh);
+}
+function addToFav(){
+	new Ajax.Request(
+		"/ajaxAddToFav.asp?goodsId=" + cpid + "&t=" + new Date().getTime(),{
+			method:"get",
+			onComplete:function(xhr){
+				var ret = xhr.responseText;
+				if (xhr.status != 200){
+					alert(ret)
+					return;
+				}
+				if (ret == "notlogin"){
+					alert("收藏失败");
+					return
+				}				
+				showWaitTip(false, null);
+				$("favSuc").style.visibility = "visible";
+			}
+		}
+	);
+}
+function goTop(){
+	tmrScroller = window.setInterval(function(){
+		if (scrollY == 0){window.clearInterval(tmrScroller); return;}
+		window.scrollBy(0, -500);
+	}, 1);	
+}
+
+function btnClick(btn, frm, act){ //评价、咨询等按钮单击
+	showWaitTip(true, "请稍候...");
+	var objStat = btn.childNodes[0];
+	if (!frm){
+		var frm = document.emptyFrm;
+		frm.act.value = act;
+	}
+	getUsrLgnStat(frm, objStat);
+	var tmr = window.setInterval(function(){
+		if (objStat.getAttribute("stat")){
+			window.clearInterval(tmr);
+			var stat = objStat.getAttribute("stat");
+			var json = jsonParse(stat);
+			objStat.removeAttribute("stat");
+			showWaitTip(false);
+			var login = json.login;
+			if (login == "0"){
+				switch(json.act){
+					case "prodReview":
+						if (json.canProdRvw != "suc"){
+							btn.disabled = true;
+							btn.previousSibling.innerHTML = json.canProdRvw;
+							btn.previousSibling.style.visibility = "visible";
+							return;
+						}
+						window.setTimeout(function(){showTxtForm(act, btn, ordrId);}, 300);				
+						break;
+					case "saveProdRvw":
+						btn.disabled = false;
+						var tip = btn.nextSibling;
+						var ret = json.result;
+						if (ret == "suc"){
+							tip.className = "suc";
+							tip.innerHTML = "恭喜！您的评论已成功提交。<a href=\"/goods/review/record_" + json.reviewId + ".html\" target=\"_blank\">[查看我的评论]</a>";
+						}else{
+							tip.className = "err";
+							tip.innerHTML = ret;
+						}
+						tip.style.visibility = "visible";						
+						break;
+					case "prodQuestion":
+						if (json.canProdQue != "suc"){
+							btn.disabled = true;
+							btn.previousSibling.innerHTML = json.canProdQue;
+							btn.previousSibling.style.visibility = "visible";
+							return;
+						}
+						window.setTimeout(function(){showTxtForm(act, btn, ordrId);}, 300);
+						break;
+					case "saveProdQue":
+						btn.disabled = false;
+						var tip = btn.nextSibling;
+						var ret = json.result;
+						if (ret == "suc"){
+							tip.className = "suc";
+							tip.innerHTML = "恭喜！您的咨询已成功提交，请等待管理员处理。<a href=\"/customer/account_item.html?item=que\" target=\"_blank\">[查看我的提问]</a>";
+						}else{
+							tip.className = "err";
+							tip.innerHTML = ret;
+						}
+						tip.style.visibility = "visible";
+						break;
+				}
+				var ordrId = json.ordrId;								
+				return;
+			}
+			//alert(frm.act.value)
+			var needCode = (login == "1") ? true : false;
+			showLgnDialog(getFormStr(frm.act.value, needCode));
+		}
+	}, 1);
+}
+
+function showTxtForm(act, btn, ordrId){
+	var elemHght;
+	switch(act){
+		case "prodReview":
+			$("rvwbox").style.display = "block";
+			btn.parentNode.style.display = "none";
+			elemHght = getElmtPos($("rvwbox")).y + $("rvwbox").offsetHeight;
+			var frm = document.frmRvw;
+			frm.ordrId.value = ordrId;
+			frm.rvwCnt.onfocus = function(){
+				this.className = this.className.replace(" prodRedBrd", "");
+				var obj = this.nextSibling;
+				obj.className = obj.className.replace(" prodRedTxt", "");
+			}
+			frm.rvwCnt.focus();
+			attachRvwStar();
+			sclToFrmPos(elemHght);
+			break;
+		case "prodQuestion":
+			$("quebox").style.display = "block";
+			btn.parentNode.style.display = "none";
+			elemHght = getElmtPos($("quebox")).y + $("quebox").offsetHeight;
+			var frm = document.frmQue;
+			frm.queCnt.onfocus = function(){
+				this.className = this.className.replace(" prodRedBrd", "");
+				var obj = this.nextSibling;
+				obj.className = obj.className.replace(" prodRedTxt", "");
+			}
+			frm.queCnt.focus();
+			sclToFrmPos(elemHght);
+			break;
+	}
+}
+function sclToFrmPos(elemHeight){
+	var docHght = scrollY + document.documentElement.clientHeight
+	if (docHght < elemHeight){
+		var fh = elemHeight - docHght + 10; //需要滚动的总距离
+		var sh = 20;	  //每次滚动的距离
+		var rh = fh;	  //剩下的距离
+		var ah = 0;	      //已经滚动的距离
+		var tmr = window.setInterval(function(){
+			if (rh < sh) sh = rh;
+			window.scrollBy(0, sh);
+			ah += sh;
+			rh = fh - ah;
+			if (rh == 0){
+				window.clearInterval(tmr);
+				return;
+			}
+		}, 1);			
+	}
+}
+function saveTxtForm(act, btn){	
+	var frm;
+	if (act == 0){
+		frm = document.frmRvw;
+		var obj = frm.rvwCnt;
+		obj.value = obj.value.Trim();
+		if (obj.value.length < 5 || obj.value.length > 200){
+			obj.className += (obj.className.indexOf(" prodRedBrd") == -1) ?  " prodRedBrd" : "";
+			obj.nextSibling.className += (obj.nextSibling.className.indexOf(" prodRedTxt") == -1) ? " prodRedTxt" : "";
+			return;
+		}
+	}else{
+		frm = document.frmQue;
+		var obj = frm.queCnt;
+		obj.value = obj.value.Trim();
+		if (obj.value.length < 4 || obj.value.length > 100){
+			obj.className += (obj.className.indexOf(" prodRedBrd") == -1) ?  " prodRedBrd" : "";
+			obj.nextSibling.className += (obj.nextSibling.className.indexOf(" prodRedTxt") == -1) ? " prodRedTxt" : "";
+			return;
+		}
+	}
+	if (!frm) return;
+	btn.disabled = true;
+	btn.nextSibling.style.visibility = "hidden";
+	btnClick(btn, frm);	
+}
+function showInfo(title, msg, needFoot, isParent){
+	var doc = (isParent) ? parent.document : document;
+	var lyr = doc.getElementById("dlgInfo");
+	showMask(isParent);
+	var hStr = "<div class='dlgTitle'>" + title + "<div class='close' onclick='javascript:clsdlg(\"dlgInfo\");'>×</div></div><span>" + msg + "</span>"
+	if (needFoot) hStr += "<div class='dlgFoot'><a href='javascript:void(0);' onclick='javascript:clsdlg(\"dlgInfo\");'>关闭</a></div>"
+	lyr.childNodes[1].innerHTML = hStr;
+	if (isIE6) lyr.style.top = (scrollY + (document.documentElement.offsetHeight - lyr.offsetHeight) / 2 + 70) + "px";
+	lyr.style.visibility = "visible";
+}
+function showComplete(msg, needFoot, isParent){
+	var doc = (isParent) ? parent.document : document;
+	var lyr = doc.getElementById("dlgComplete");
+	showMask(isParent);
+	var hStr = "<div class='dlgTitle'>操作成功<div class='close' onclick='javascript:clsdlg(\"dlgComplete\");'>×</div></div><span>" + msg + "</span><div class='dlgFoot'></div>";
+	lyr.childNodes[1].innerHTML = hStr
+	if (isIE6) lyr.style.top = (scrollY + (document.documentElement.offsetHeight - lyr.offsetHeight) / 2 + 70) + "px";
+	lyr.style.visibility = "visible";
+}
+function showQuestion(msg, isParent){
+	var doc = (isParent) ? parent.document : document;
+	if (doc.getElementById("waitBox")){doc.getElementById("waitBox").style.visibility = "hidden";}
+	var lyr = doc.getElementById("dlgQuestion");
+	showMask(isParent);
+	lyr.childNodes[1].innerHTML = "<div class='dlgTitle'>系统提问</div><span>" + msg + "</span><div class='dlgFoot'><a href='javascript:void(0);' onclick='javascript:void(0);'></a>&nbsp;<a href='javascript:void(0);' onclick='javascript:clsdlg(\"dlgQuestion\");'>取消操作</a></div>";
+	lyr.style.visibility = "visible";
+}
+function clsdlg(dlgId){
+	document.getElementById(dlgId).style.visibility = "hidden";
+	document.getElementById("lyrMask").style.visibility = "hidden";
+}
+function showWaitTip(flag, msg){
+	var obj = $("lyrExec");
+	if (flag){
+		obj.innerHTML = msg;
+		obj.style.visibility = "visible";
+		if (isIE6){obj.style.top = (scrollY + 5) + "px";}
+		return;
+	}
+	obj.style.visibility = "hidden";
+}

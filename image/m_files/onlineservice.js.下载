@@ -1,0 +1,16 @@
+function OpenService(flag){
+	var w=700,h=500;
+	var t=(window.screen.availHeight-h)/2;
+	var l=(window.screen.availWidth-w)/2;
+	try{
+		ServiceWindow=window.open ("/OnLineService_2011/RedirectToNewChat.asp?actflag=" + flag,"ols2009","width="+w+",height="+h+",top="+t+",left="+l+",scrollbars=0,menubar=0,resizable=0,toolbar=0,resizable=0");
+		ServiceWindow.focus();
+	}
+	catch(err){
+		return true;
+	}
+	return false;
+}
+function Feedback(action){
+	OpenService(action+1);
+}

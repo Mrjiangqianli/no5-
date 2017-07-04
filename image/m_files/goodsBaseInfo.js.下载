@@ -1,0 +1,97 @@
+
+$("sPriNM").style.cssText = ($("sPriNM").innerHTML.length > 1) ? "display:block; color:#d11010; " : "display:none";
+$("sPriVL").style.cssText = ($("sPriVL").innerHTML.length > 1) ? "display:block; color:#d11010; font-size:16px; font-weight:bold; border: 0px solid #666;" : "display:none";
+
+var goods_qg_countdown = function(elObj, startTime, endTime) {
+
+	startTime = startTime.replace(/-/g, "/");
+	endTime = endTime.replace(/-/g, "/");
+	var ds = new Date(startTime);
+	var de = new Date(endTime)
+	var num_temp, num_day, num_hour, num_minute, num_second;
+	
+	num_temp = de.getTime() - ds.getTime();
+		
+	if (num_temp <= 0) return;
+	
+	num_temp = (num_temp) / 86400000;
+	num_day = Math.floor(num_temp);
+	
+	num_temp = (num_temp - num_day) * 24;
+	num_hour = Math.floor(num_temp);
+	
+	num_temp = (num_temp - num_hour) * 60;
+	num_minute = Math.floor(num_temp);
+	
+	num_second = Math.floor((num_temp - num_minute) * 60);
+	
+	var num_second2 = 10;
+
+	var inStr = '<span>' + num_hour + '</span>'
+			+'时'
+			+'<span>' + num_minute + '</span>'
+			+'分'
+			+'<span>' + num_second + '.0</span>'
+			+'秒';
+			
+	if (num_day > 0){
+		inStr = '<span>' + num_day + '</span>'
+			+'天'
+			+inStr;
+	}
+	//inStr='剩余' + inStr;
+	elObj.innerHTML = inStr;
+	
+	var tmr = window.setInterval(function() {
+		num_second2 -= 1;
+		
+		if (num_second == 0 && num_second2 == 0 && num_minute == 0 && num_hour == 0 && num_day == 0) {
+			window.clearInterval(tmr);
+			window.location.reload();
+		}
+		
+		if (num_second2 < 0) {
+			num_second2 = 9;
+			num_second -= 1;
+			
+			if (num_second < 0) {
+				num_second = 59;
+				num_minute -= 1;
+				
+				if (num_minute < 0){
+					num_minute = 59;
+					num_hour -= 1;
+					
+					if (num_hour < 0){
+						num_hour = 23;
+						num_day -= 1;
+						
+						if (num_day < 0) {
+							window.clearInterval(tmr);
+							window.location.reload();
+							return;
+						}
+					}
+				}
+			}
+		}
+		
+		inStr = '<span>' + num_hour + '</span>'
+		+'时'
+		+'<span>' + num_minute + '</span>'
+		+'分'
+		+'<span>' + num_second + '.' + num_second2 + '</span>'
+		+'秒';
+		if (num_day > 0) {
+			inStr = '<span>' + num_day + '</span>'
+			+'天'
+			+inStr;
+		}
+		//inStr='剩余' + inStr;
+		elObj.innerHTML = inStr;
+	}, 100);
+};
+if ($("flash_sale_cd")) {
+	$("flash_sale_cd").onselectstart = function() { return false; }
+	goods_qg_countdown($("flash_sale_cd"), $("flash_sale_cd").getAttribute("st"), $("flash_sale_cd").getAttribute("et"));
+}

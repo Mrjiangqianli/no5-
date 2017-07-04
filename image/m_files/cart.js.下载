@@ -1,0 +1,48 @@
+function atc(proid){
+	if(window.name=="shoppingcar"){window.name="";}
+	var url="/shopping/checkout_addtocart.asp?productid=" + proid + "&r=" + new Date().getTime();
+	var w=1024,h=800,l,t,aw=window.screen.availWidth,ah=window.screen.availHeight;
+	if (aw<=w||ah<=h){
+		w=aw-30;
+		h=ah-180;	
+	}
+	l=parseInt((aw-w)/2,10)-5;
+	t=parseInt((ah-h)/2,10)-60;
+	if (t<30){
+		h=ah-180;
+		t=parseInt((ah-h)/2,10)-60;
+	}
+	if (aw>=1440){
+		w=1280;
+		l=parseInt((aw-w)/2,10)-5;
+	}
+	var cart=window.open (url,"shoppingcar","width="+w+",height="+h+",top="+t+",left="+l+",menubar=1,location=1,toolbar=1,scrollbars=1,resizable=1");
+	cart.focus();
+}
+
+function atc_a(proid,amount){
+	if (!/^\d+$/.test(amount)||amount=="0"){
+		alert("请您输入正确的购买数量。");
+		return;
+	}
+	amount=parseInt(amount,10);
+	if(window.name=="shoppingcar"){window.name="";}
+	var url="/shopping/checkout_addtocart.asp?productid=" + proid + "&amount=" + amount + "&r=" + new Date().getTime();
+	var w=1024,h=800,l,t,aw=window.screen.availWidth,ah=window.screen.availHeight;
+	if (aw<=w||ah<=h){
+		w=aw-30;
+		h=ah-180;	
+	}
+	l=parseInt((aw-w)/2,10)-5;
+	t=parseInt((ah-h)/2,10)-60;
+	if (t<30){
+		h=ah-180;
+		t=parseInt((ah-h)/2,10)-60;
+	}
+	if (aw>=1440){
+		w=1280;
+		l=parseInt((aw-w)/2,10)-5;
+	}
+	var cart=window.open (url,"shoppingcar","width="+w+",height="+h+",top="+t+",left="+l+",menubar=1,location=1,toolbar=1,scrollbars=1,resizable=1");
+	cart.focus();
+}

@@ -1,0 +1,203 @@
+function attachPicBox(){
+	var els = $("picIdxBox").getElementsByTagName("li");
+	var cnt = els.length
+	var igs = $("pic_box").getElementsByTagName("img");	
+	for (var i = 0; i < cnt; i++){
+		els[i].onmouseover = function(){
+			ciid = this.id.substring(4);	
+			this.className = "pic_li pic_on";
+			for (var j = 0; j < cnt; j++){
+				if (j == ciid) igs[j].style.display = "block";
+				else{
+					igs[j].style.display = "none";
+					els[j].className = "pic_li";
+				}
+			}
+		}
+	}
+}
+
+function attachMagnifier(){
+	var pic_box = $("pic_box");
+	if (!pic_box || !hPicExist) return;
+	var pic_chk_box = $("pic_chk_box")
+	var magnifier = $("magnifier");
+	var igs = pic_chk_box.getElementsByTagName("img");
+	var zoomBox = $("zoomBox");
+	var disBox = zoomBox.getElementsByTagName("div")[1]
+	var objWait = zoomBox.getElementsByTagName("div")[0];
+	pic_box.onmouseout = function(){magnifier.style.visibility = "hidden"; zoomBox.style.visibility = "hidden";}
+	magnifier.onmouseover = function(){
+		var imgF = igs[ciid];
+		if (imgF.getAttribute("nothing")) return; //无超大图;
+		var imgT = disBox.getElementsByTagName("img")[0];
+		if (imgF.complete && imgF.src.length > 0 && imgF.src == arrPic[ciid]){
+			imgT.src = imgF.src;
+			objWait.style.display = "none";
+			disBox.style.visibility = "visible";
+		}else{
+			objWait.style.display = "block";
+			disBox.style.visibility = "hidden";
+			imgF.src = arrPic[ciid];
+			var tmr = window.setInterval(function(){
+				if (imgF.complete && imgF.src.indexOf("photo") != -1 && imgF.id.substring(6) == ciid){
+					imgT.src = imgF.src
+					objWait.style.display = "none";
+					if (magnifier.style.visibility == "visible") disBox.style.visibility = "visible";
+					window.clearInterval(tmr);
+					return;
+				}
+			}, 1);
+		}
+	}
+	$("magnifier").onmouseout = function(){
+		$("zoomBox").style.visibility = "hidden";
+		disBox.style.visibility = "hidden";
+	}
+	disBox.onmouseover = function(){
+		$("zoomBox").style.visibility = "hidden";
+		disBox.style.visibility = "hidden";
+	}
+	pic_box.onmousemove = function(e){
+		if (!hPicExist) return;
+		if ($("cheImg" + ciid).getAttribute("nothing")) return;  //无超大图;
+		var evt = e || window.event;
+		var sl = getElmtPos($("pic_box")).x, st = getElmtPos($("pic_box")).y;
+		var imgW = this.offsetWidth, imgH = this.offsetHeight;
+		var el = sl + imgW, et = st + imgH;		
+		magnifier.style.visibility = "visible";
+		zoomBox.style.left = (el + 15) + "px";
+		zoomBox.style.visibility = "visible";
+		with(magnifier){
+			var nl = evt.clientX - parseInt((offsetHeight /2), 10);
+			var nt = evt.clientY - parseInt((offsetWidth / 2), 10) + docScrollTop();
+			var prtX = disBox.offsetWidth / imgW, prtY = disBox.offsetHeight / imgH;
+			style.left = nl + "px";
+			style.top = nt + "px";
+			if (nl < sl) style.left = (sl) + "px";
+			if (nl > el - offsetWidth) style.left = (el - offsetWidth) + "px";
+			if (nt < st) style.top = (st) + "px";
+			if (nt > et - offsetHeight) style.top = (et - offsetHeight) + "px";
+			disBox.style.left = (0 - (offsetLeft - sl + 1) * prtX) + "px";
+			disBox.style.top = (0 - (offsetTop - st + 1) * prtY) + "px";
+		}
+	}
+	pic_box.onclick = function(){
+		var url = "/browse/pics-" + cpid + ".html"
+		window.open (url);
+	}
+}
+
+function attachBuyCtrs(){
+	var obj = $("boxBuy");
+	obj.getElementsByTagName("img")[0].onclick = function(){
+		var ctr = this.nextSibling;
+		if (!isNaN(ctr.value)){
+			if (ctr.value == 1) return;
+			ctr.value = parseInt(ctr.value, 10) - 1;
+		}
+		else ctr.value = 1;
+	}
+	obj.getElementsByTagName("img")[1].onclick = function(){
+		var ctr = this.previousSibling;
+		if (!isNaN(ctr.value)) {
+			if (ctr.value == 999) return;
+			ctr.value = parseInt(ctr.value, 10) + 1;
+		}
+		else ctr.value = 1;
+	}
+	$("buyAnt").onkeydown = function(e){
+		var evt = e || window.event;
+		var k = evt.keyCode;
+		if (k > 47 && k < 58) return true;
+		else if (k > 94 && k < 106) return true;
+		else if (k == 8 || k == 37 || k == 39 || k == 46 || k == 9) return true;
+		else return false;
+	}
+	$("buyAnt").onblur = function(){
+		if (!/^[0-9]*[1-9][0-9]*$/.test(this.value)) {this.value = 1;}
+		this.value = parseInt(this.value, 10);
+	}
+	obj.getElementsByTagName("button")[0].onclick = function(){ //放入购物车
+		atc_a(cpid, $F("buyAnt"));
+	}
+}
+
+function attachTabBar(){
+	var objTab = $("tabBar");
+	if (!objTab) return;
+	var btns = objTab.getElementsByTagName("a");
+	for (var i = 0; i < btns.length; i++){
+		btns[i].onclick = function(){
+			var btns = getElems("a", $("tabBar"))
+			for (var j = 0; j < btns.length; j++){
+				btns[j].parentNode.className = "";
+				btns[j].style.color = "#000000";
+				if (this.parentNode.id.slice(-1) != j) $("tab_box_" + j).style.display = "none";
+			}
+			this.parentNode.className = "tabson";
+			this.style.color = "#ffffff";
+			switch(this.parentNode.id){
+				case "pTab_0":
+					$("tab_box_0").style.display = "block"
+					$("tab_box_1").style.display = "block"
+					$("tab_box_2").style.display = "block"
+					goToTabBar(objTab);
+					break;
+				case "pTab_1":
+					$("tab_box_1").style.display = "block"
+					goToTabBar(objTab);
+					break;
+				case "pTab_2":
+					$("tab_box_2").style.display = "block"
+					goToTabBar(objTab);
+					break;
+				case "pTab_3":
+					$("tab_box_3").style.display = "block"
+					goToTabBar(objTab);
+					if (load_gwxz) return;
+					load_gwxz = true;
+					window.setTimeout(function(){					
+						getHtml(getElems("div", $("tab_box_3"))[1], "help_prod_gwxz");						
+					}, 300);					
+					break;
+			}
+		}
+		btns[i].onmouseover = function(){
+			this.style.color = "#ffffff";
+		}
+		btns[i].onmouseout = function(){
+			if (this.parentNode.className != "tabson") this.style.color = "#000000";
+		}		
+	}
+}
+function goToTabBar(objTab){
+	objTab.style.position = "static";
+	var oh = getElmtPos(objTab).y
+	if (scrollY > oh) window.scrollTo(0, oh);
+}
+function attachRvwStar(){
+	var els = getElems("span", $("score"));
+	var frm = document.frmRvw;	
+	for (var i = 0; i < els.length - 1; i++){
+		els[i].onclick = function(){
+			var curId = getElemIdx(this, els);
+			for (j = 0; j < els.length - 1; j++){
+				els[j].className = (j > curId) ? "substar starGray" : "substar";
+				frm.score.value = curId + 1;
+			}
+		}
+		els[i].onmouseover = function(){
+			var curId = getElemIdx(this, els);
+			for (j = 0; j < els.length - 1; j++){
+				els[j].className = (j > curId) ? "substar starGray" : "substar";
+			}
+		}
+		els[i].onmouseout = function(){
+			var curId = frm.score.value - 1;
+			for (j = 0; j < els.length - 1; j++){
+				els[j].className = (j > curId) ? "substar starGray" : "substar";
+			}									
+		}
+	}
+}

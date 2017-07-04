@@ -1,0 +1,16 @@
+function getHtml(ele, tag){
+	new Ajax.Request(
+		"/ajaxGetHtml.asp?tag=" + tag + "&t=" + new Date().getTime(),{
+			method:"get",
+			onComplete:function(xhr){
+				var ret = xhr.responseText;
+				if (xhr.status != 200){
+					//alert(ret)
+					return;
+				}
+				var json = jsonParse(ret);
+				ele.innerHTML = json.content;
+			}
+		}
+	);
+}
